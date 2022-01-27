@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { getCustomRepository } from 'typeorm';
+import { getCustomRepository, Raw } from 'typeorm';
 
 import TransactionsRepository from '../repositories/TransactionsRepository';
 import CreateTransactionService from '../services/CreateTransactionService';
@@ -23,8 +23,33 @@ transactionsRouter.get('/', async (request, response) => {
   return response.json({ transactions, balance });
 });
 
+transactionsRouter.get('/filtered', async (request, response) => {
+  // TODO
+  const { month, year } = request.query;
+
+  const parsedMonth = String(month).padStart(2, '0');
+
+  const transactionsRepository = getCustomRepository(TransactionsRepository);
+
+  const transactions = await transactionsRepository.find({
+    where: {
+      date: Raw(
+        dataFieldName =>
+          `to_char(${dataFieldName}, 'MM-YYYY') = '${parsedMonth}-${year}'`,
+      ),
+    },
+  });
+
+  const balance = await transactionsRepository.getFilteredBalance({
+    month: Number(month),
+    year: Number(year),
+  });
+
+  return response.json({ transactions, balance });
+});
+
 transactionsRouter.post('/', async (request, response) => {
-  const { title, value, type, category } = request.body;
+  const { title, value, type, category, date } = request.body;
 
   const createTransaction = new CreateTransactionService();
 
@@ -33,6 +58,7 @@ transactionsRouter.post('/', async (request, response) => {
     value,
     type,
     category,
+    date,
   });
 
   return response.json(transaction);

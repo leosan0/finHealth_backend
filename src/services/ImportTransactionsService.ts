@@ -11,6 +11,7 @@ interface CSVTransaction {
   type: 'income' | 'outcome';
   value: number;
   category: string;
+  date: Date;
 }
 
 class ImportTransactionsService {
@@ -31,14 +32,14 @@ class ImportTransactionsService {
     const categories: string[] = [];
 
     parseCSV.on('data', async line => {
-      const [title, type, value, category] = line.map((cell: string) =>
+      const [title, type, value, category, date] = line.map((cell: string) =>
         cell.trim(),
       );
 
       if (!title || !type || !value) return;
 
       categories.push(category);
-      transactions.push({ title, type, value, category });
+      transactions.push({ title, type, value, category, date });
     });
 
     await new Promise(resolve => parseCSV.on('end', resolve));
@@ -75,6 +76,7 @@ class ImportTransactionsService {
         category: finalCategories.find(
           category => category.title === transaction.category,
         ),
+        date: transaction.date,
       })),
     );
 

@@ -30,6 +30,9 @@ class Transaction {
   @Column()
   category_id: string;
 
+  @Column()
+  date: Date;
+
   @CreateDateColumn()
   created_at: Date;
 
